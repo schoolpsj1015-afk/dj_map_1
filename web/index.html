@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>부산 편의점 상권 지도 | Busan Convenience Stores Map</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Leaflet MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <!-- Google Fonts: Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app-container">
+    
+    <!-- Desktop / Mobile Slide-over Sidebar -->
+    <aside id="sidebar">
+      <!-- Header -->
+      <div class="sidebar-header">
+        <div class="brand-title">
+          <div class="logo-icon"><i class="fa-solid fa-store"></i></div>
+          <div class="title-wrap">
+            <h1>부산 편의점 지도</h1>
+            <span class="sub-title">소상공인시장진흥공단 상권 빅데이터</span>
+          </div>
+        </div>
+        <button id="sidebar-close-btn" class="icon-btn mobile-only" aria-label="닫기">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Search & Filters Container -->
+      <div class="filter-section">
+        <!-- Keyword Search Input (All fields) -->
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="keyword-input" placeholder="상호명, 지점명, 도로명, 법정·행정동 검색..." autocomplete="off">
+          <button id="clear-search-btn" class="clear-btn" style="display:none;" aria-label="검색어 지우기">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </button>
+        </div>
+
+        <!-- 분류 헤더 -->
+        <div class="category-header">
+          <span class="category-main-title"><i class="fa-solid fa-layer-group"></i> 분류</span>
+        </div>
+
+        <!-- 1. 지역 (구·군) Dropdown -->
+        <div class="filter-group">
+          <label for="region-select" class="filter-label">
+            <span class="step-num">1</span> 지역 (구·군)
+          </label>
+          <div class="select-wrapper">
+            <select id="region-select">
+              <option value="ALL">부산시 전체 (16개 구·군)</option>
+              <option value="강서구">강서구</option>
+              <option value="금정구">금정구</option>
+              <option value="기장군">기장군</option>
+              <option value="남구">남구</option>
+              <option value="동구">동구</option>
+              <option value="동래구">동래구</option>
+              <option value="부산진구">부산진구</option>
+              <option value="북구">북구</option>
+              <option value="사상구">사상구</option>
+              <option value="사하구">사하구</option>
+              <option value="서구">서구</option>
+              <option value="수영구">수영구</option>
+              <option value="연제구">연제구</option>
+              <option value="영도구">영도구</option>
+              <option value="중구">중구</option>
+              <option value="해운대구">해운대구</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 2. 브랜드 Filter Pills (No '#' symbols) -->
+        <div class="filter-group">
+          <div class="filter-label-wrap">
+            <span class="filter-label"><span class="step-num">2</span> 브랜드</span>
+            <button id="select-all-brands-btn" class="text-btn">전체선택</button>
+          </div>
+          <div class="brand-pills-container">
+            <button type="button" class="brand-pill active" data-brand="CU">
+              <span class="pill-dot cu"></span>CU <span class="pill-count" id="count-cu">0</span>
+            </button>
+            <button type="button" class="brand-pill active" data-brand="GS25">
+              <span class="pill-dot gs25"></span>GS25 <span class="pill-count" id="count-gs25">0</span>
+            </button>
+            <button type="button" class="brand-pill active" data-brand="SEVEN">
+              <span class="pill-dot seven"></span>세븐일레븐 <span class="pill-count" id="count-seven">0</span>
+            </button>
+            <button type="button" class="brand-pill active" data-brand="EMART24">
+              <span class="pill-dot emart24"></span>이마트24 <span class="pill-count" id="count-emart24">0</span>
+            </button>
+            <button type="button" class="brand-pill active" data-brand="OTHER">
+              <span class="pill-dot other"></span>개인·기타 <span class="pill-count" id="count-other">0</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Result Summary Bar -->
+        <div class="result-summary">
+          <span class="summary-text">검색 결과 <strong id="total-count">0</strong>개 점포</span>
+          <button id="reset-filter-btn" class="text-btn">필터 초기화</button>
+        </div>
+      </div>
+
+      <!-- Store List View -->
+      <div class="store-list-container">
+        <ul id="store-list" class="store-list">
+          <!-- Dynamically populated -->
+        </ul>
+        <div id="empty-state" class="empty-state" style="display: none;">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <p>조건에 맞는 편의점이 없습니다.</p>
+          <small>검색어나 필터 설정을 변경해 보세요.</small>
+        </div>
+      </div>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <span>데이터 기준: 2026년 3월 소상공인시장진흥공단</span>
+      </div>
+    </aside>
+
+    <!-- Main Map View Area -->
+    <main id="main-content">
+      <!-- Mobile Floating Search/Filter Bar -->
+      <header id="mobile-top-bar" class="mobile-only">
+        <button id="mobile-menu-btn" class="mobile-bar-btn" aria-label="메뉴 열기">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="mobile-search-display" id="mobile-search-trigger">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <span id="mobile-search-placeholder">부산 편의점 검색 및 필터...</span>
+        </div>
+        <button id="mobile-location-btn" class="mobile-bar-btn" aria-label="내 위치">
+          <i class="fa-solid fa-crosshairs"></i>
+        </button>
+      </header>
+
+      <!-- Leaflet Map Container -->
+      <div id="map"></div>
+
+      <!-- Quick Floating Control Buttons -->
+      <div class="floating-controls">
+        <button id="gps-btn" class="float-btn" title="내 위치로 이동">
+          <i class="fa-solid fa-location-crosshairs"></i>
+        </button>
+        <button id="reset-view-btn" class="float-btn" title="부산 전체 보기">
+          <i class="fa-solid fa-expand"></i>
+        </button>
+        <button id="toggle-list-btn" class="float-btn mobile-only" title="목록 보기">
+          <i class="fa-solid fa-list-ul"></i>
+          <span class="badge" id="mobile-list-count">0</span>
+        </button>
+      </div>
+
+      <!-- Bottom Sheet Modal for Mobile (Store Details) -->
+      <div id="bottom-sheet" class="bottom-sheet">
+        <div class="sheet-drag-handle" id="sheet-handle"></div>
+        <div class="sheet-header">
+          <div class="sheet-title-row">
+            <h2 id="sheet-store-name">편의점 이름</h2>
+            <button id="sheet-close-btn" class="icon-btn" aria-label="닫기">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div id="sheet-hashtags" class="tag-row">
+            <!-- Hashtags will be rendered here -->
+          </div>
+        </div>
+        <div class="sheet-body">
+          <div class="info-row">
+            <i class="fa-solid fa-map-location-dot info-icon"></i>
+            <div class="info-text">
+              <span class="addr-label">도로명</span>
+              <span id="sheet-road-addr" class="addr-value">-</span>
+              <button id="copy-road-btn" class="copy-btn" title="도로명주소 복사">
+                <i class="fa-regular fa-copy"></i>
+              </button>
+            </div>
+          </div>
+          <div class="info-row">
+            <i class="fa-regular fa-building info-icon"></i>
+            <div class="info-text">
+              <span class="addr-label">지번</span>
+              <span id="sheet-jibun-addr" class="addr-value">-</span>
+              <button id="copy-jibun-btn" class="copy-btn" title="지번주소 복사">
+                <i class="fa-regular fa-copy"></i>
+              </button>
+            </div>
+          </div>
+          <div class="action-buttons-grid">
+            <a id="kakao-map-btn" href="#" target="_blank" rel="noopener noreferrer" class="map-link-btn kakao">
+              <i class="fa-solid fa-route"></i> 카카오맵 길찾기
+            </a>
+            <a id="naver-map-btn" href="#" target="_blank" rel="noopener noreferrer" class="map-link-btn naver">
+              <i class="fa-solid fa-diamond-turn-right"></i> 네이버 지도
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Backdrop for mobile drawers -->
+      <div id="overlay-backdrop" class="overlay-backdrop"></div>
+
+      <!-- Toast Notification -->
+      <div id="toast" class="toast">주소가 복사되었습니다.</div>
+    </main>
+
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Leaflet MarkerCluster JS -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <!-- Standalone Pre-extracted Data JS -->
+  <script src="data.js"></script>
+  <!-- Main Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
