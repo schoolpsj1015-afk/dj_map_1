@@ -201,13 +201,13 @@ function initMap() {
     maxZoom: 19
   });
 
-  // 기본 레이어로 안전하고 빠른 CartoDB 적용 (사용량 초과 멈춤 100% 방지)
-  cartoVoyager.addTo(state.map);
+  // 기본 레이어로 국토교통부 VWorld 적용
+  vworldBase.addTo(state.map);
 
   // 지도 우측 상단 레이어 전환 컨트롤 추가
   L.control.layers({
-    "모던 상세 지도 (CartoDB)": cartoVoyager,
     "국토교통부 표준지도 (VWorld)": vworldBase,
+    "모던 상세 지도 (CartoDB)": cartoVoyager,
     "상세 거리 지도 (Esri)": esriStreet,
     "오픈스트리트맵 (OSM HOT)": osmHot
   }, null, { position: 'topright' }).addTo(state.map);
