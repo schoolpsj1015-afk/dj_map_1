@@ -97,6 +97,43 @@ body {
   gap: 12px;
 }
 
+/* Quick Navigation Bar */
+.quick-nav-bar {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #f1f5f9;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.nav-switch-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 10px;
+  background: #ffffff;
+  color: #1e293b;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  transition: all 0.2s ease;
+}
+
+.nav-switch-btn:hover {
+  background: var(--primary-color);
+  color: #ffffff;
+  border-color: var(--primary-color);
+}
+
+.nav-switch-btn.outline {
+  flex: 0 0 auto;
+  padding: 7px 12px;
+}
+
 .logo-icon {
   width: 42px;
   height: 42px;

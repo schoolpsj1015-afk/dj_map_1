@@ -133,30 +133,39 @@ function initMap() {
     tap: true
   }).setView(defaultPos, defaultZoom);
 
-  // 1. 국토교통부 VWorld 기본 지도 (국내 최적화, 한글 완벽, API키 불필요, 403 없음)
+  // 1. CartoDB Voyager (완전 무료, 한국어 POI 완벽, CDN 가속, 사용량 제한 없음)
+  const cartoVoyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    subdomains: 'abcd',
+    maxZoom: 20
+  });
+
+  // 2. 국토교통부 VWorld 기본 지도 (선택 가능, 에러 시 fallback)
   const vworldBase = L.tileLayer('https://xdworld.vworld.kr/2d/Base/service/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://www.vworld.kr/">VWorld</a> 국토교통부 공간정보',
     minZoom: 6,
-    maxZoom: 19
+    maxZoom: 19,
+    errorTileUrl: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/12/3518/1638.png'
   });
 
-  // 2. Esri World Street Map (글로벌 표준 상세 지도, 워터마크 없음)
+  // 3. Esri World Street Map (글로벌 표준 상세 지도)
   const esriStreet = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
     attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ',
     maxZoom: 19
   });
 
-  // 3. OpenStreetMap Humanitarian (HOT)
+  // 4. OpenStreetMap Humanitarian (HOT)
   const osmHot = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19
   });
 
-  // 기본 레이어로 VWorld 적용
-  vworldBase.addTo(state.map);
+  // 기본 레이어로 안전하고 빠른 CartoDB 적용 (사용량 초과 멈춤 100% 방지)
+  cartoVoyager.addTo(state.map);
 
   // 지도 우측 상단 레이어 전환 컨트롤 추가
   L.control.layers({
+    "모던 상세 지도 (CartoDB)": cartoVoyager,
     "국토교통부 표준지도 (VWorld)": vworldBase,
     "상세 거리 지도 (Esri)": esriStreet,
     "오픈스트리트맵 (OSM HOT)": osmHot

@@ -2,13 +2,443 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=web/index.html">
-  <title>부산 편의점 상권 지도</title>
-  <script>
-    window.location.replace("web/index.html");
-  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>부산 상권 빅데이터 지도 포털 | Busan Commercial Data Portal</title>
+  <meta name="description" content="부산광역시 소상공인 상가(상권)정보 빅데이터를 바탕으로 한 인터랙티브 지도 포털. 편의점 특화 지도 및 15.5만 부산 전체 상가 업종별 지도를 제공합니다.">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <!-- Google Fonts: Outfit & Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-gradient: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+      --accent-cvs: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+      --accent-all: linear-gradient(135deg, #0ea5e9 0%, #10b981 50%, #059669 100%);
+      --bg-dark: #090d16;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', -apple-system, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Background Ambient Glows */
+    .glow-circle {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.35;
+    }
+    .glow-1 {
+      width: 450px;
+      height: 450px;
+      background: #3b82f6;
+      top: -100px;
+      left: -100px;
+    }
+    .glow-2 {
+      width: 500px;
+      height: 500px;
+      background: #8b5cf6;
+      bottom: -150px;
+      right: -100px;
+    }
+    .glow-3 {
+      width: 350px;
+      height: 350px;
+      background: #10b981;
+      top: 40%;
+      left: 60%;
+    }
+
+    /* Container */
+    .portal-container {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 24px;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Header */
+    .portal-header {
+      text-align: center;
+      margin-bottom: 44px;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 30px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #60a5fa;
+      margin-bottom: 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .badge-pill .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #34d399;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #34d399;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+    }
+
+    .portal-title {
+      font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+      font-size: clamp(28px, 4.5vw, 42px);
+      font-weight: 900;
+      letter-spacing: -0.8px;
+      line-height: 1.25;
+      margin-bottom: 14px;
+      background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .portal-subtitle {
+      font-size: clamp(14px, 2vw, 16.5px);
+      color: var(--text-muted);
+      max-width: 640px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Services Grid */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 28px;
+      margin-bottom: 40px;
+    }
+
+    /* Service Card */
+    .service-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 32px 28px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      backdrop-filter: blur(16px);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .service-card.cvs::before {
+      background: var(--accent-cvs);
+    }
+
+    .service-card.all::before {
+      background: var(--accent-all);
+    }
+
+    .service-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .service-card:hover::before {
+      opacity: 1;
+    }
+
+    /* Card Header */
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 22px;
+    }
+
+    .icon-box {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .service-card.cvs .icon-box {
+      background: var(--accent-cvs);
+      color: #ffffff;
+    }
+
+    .service-card.all .icon-box {
+      background: var(--accent-all);
+      color: #ffffff;
+    }
+
+    .count-tag {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #f1f5f9;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .card-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-desc {
+      font-size: 14px;
+      color: #cbd5e1;
+      line-height: 1.6;
+      margin-bottom: 22px;
+    }
+
+    /* Feature Tags */
+    .feature-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 26px;
+    }
+
+    .feature-tag {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+
+    /* Action Button */
+    .action-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 14.5px;
+      font-weight: 800;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      border: none;
+    }
+
+    .service-card.cvs .action-btn {
+      background: #4f46e5;
+      color: #ffffff;
+    }
+    .service-card.cvs:hover .action-btn {
+      background: #6366f1;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+    }
+
+    .service-card.all .action-btn {
+      background: #059669;
+      color: #ffffff;
+    }
+    .service-card.all:hover .action-btn {
+      background: #10b981;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+    }
+
+    /* Info Strip */
+    .info-strip {
+      text-align: center;
+      padding: 14px 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .info-strip strong {
+      color: #60a5fa;
+    }
+
+    /* Footer */
+    .portal-footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: #64748b;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    @media (max-width: 768px) {
+      .portal-container {
+        padding: 30px 16px;
+      }
+      .services-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      .service-card {
+        padding: 24px 20px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <p>지도로 자동 이동 중입니다... <a href="web/index.html">직접 이동하기</a></p>
+
+  <!-- Glow Backgrounds -->
+  <div class="glow-circle glow-1"></div>
+  <div class="glow-circle glow-2"></div>
+  <div class="glow-circle glow-3"></div>
+
+  <!-- Portal Container -->
+  <div class="portal-container">
+    
+    <!-- Header -->
+    <header class="portal-header">
+      <div class="badge-pill">
+        <span class="pulse-dot"></span>
+        <span>소상공인시장진흥공단 2026.03 최신 빅데이터 탑재</span>
+      </div>
+      <h1 class="portal-title">부산 상권 빅데이터 지도 포털</h1>
+      <p class="portal-subtitle">
+        원하시는 상권 분석 서비스 유형을 선택하세요. 편의점 단독 정밀 분석과 부산시 10대 전 업종 15.5만 상가 전수 조회를 독립된 전용 웹앱으로 제공합니다.
+      </p>
+    </header>
+
+    <!-- Cards Grid -->
+    <div class="services-grid">
+
+      <!-- 1. 편의점 특화 지도 (web) -->
+      <a href="web/index.html" class="service-card cvs">
+        <div>
+          <div class="card-top">
+            <div class="icon-box"><i class="fa-solid fa-store"></i></div>
+            <div class="count-tag"><i class="fa-solid fa-check"></i> 2,751개 점포</div>
+          </div>
+          <h2 class="card-title">부산 편의점 상권 지도</h2>
+          <p class="card-desc">
+            CU, GS25, 세븐일레븐, 이마트24 등 주요 브랜드별 필터링, 브랜드 조합형 동적 그라데이션, 지점명 분리 표기 및 카카오·네이버 길찾기 지원
+          </p>
+          <div class="feature-list">
+            <span class="feature-tag"># 4대 브랜드</span>
+            <span class="feature-tag"># 16개 구·군</span>
+            <span class="feature-tag"># 동적 그라데이션</span>
+            <span class="feature-tag"># 초정밀 검색</span>
+          </div>
+        </div>
+        <button class="action-btn">
+          <span>편의점 지도 열기</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </a>
+
+      <!-- 2. 부산 전체 상가 상권 지도 (web2) -->
+      <a href="web2/index.html" class="service-card all">
+        <div>
+          <div class="card-top">
+            <div class="icon-box"><i class="fa-solid fa-city"></i></div>
+            <div class="count-tag"><i class="fa-solid fa-chart-pie"></i> 155,103개 상가</div>
+          </div>
+          <h2 class="card-title">부산 전체 상권 지도 (신규)</h2>
+          <p class="card-desc">
+            부산 시내 10대 업종(음식, 소매, 수리, 과학기술, 학원, 숙박, 부동산, 병의원 등) 전수 조회! 대분류·중분류·소분류 3단 계층 필터 및 고속 렌더링
+          </p>
+          <div class="feature-list">
+            <span class="feature-tag"># 10대 업종 전수</span>
+            <span class="feature-tag"># 3단계 계층 필터</span>
+            <span class="feature-tag"># 15.5만 상가 빅데이터</span>
+            <span class="feature-tag"># 렉 없는 청크 로딩</span>
+          </div>
+        </div>
+        <button class="action-btn">
+          <span>전체 상권 지도 열기 (web2)</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </a>
+
+    </div>
+
+    <!-- Direct Links Info Strip -->
+    <div class="info-strip">
+      💡 <strong>다이렉트 링크 안내:</strong> 편의점 지도는 <code>/web/</code>, 전체 상가 지도는 <code>/web2/</code> 경로로 직접 접속하실 수 있습니다.
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="portal-footer">
+    <p>&copy; 2026 부산 상권 빅데이터 지도 프로젝트. 소상공인시장진흥공단 공공데이터포털 상가(상권)정보 기준.</p>
+  </footer>
+
 </body>
 </html>

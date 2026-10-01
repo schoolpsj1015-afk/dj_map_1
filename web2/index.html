@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>부산 전체 상가 상권 지도 | 15만 상가 업종별 빅데이터</title>
+  <meta name="description" content="부산광역시 16개 구·군 155,103개 전체 상가 빅데이터 지도. 음식, 소매, 수리, 교육, 숙박, 의료 등 업종코드별 초정밀 상권 분석 및 상가 조회.">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <!-- Leaflet MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <!-- Google Fonts: Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside id="sidebar">
+    <!-- Header with Quick Switcher -->
+    <div class="sb-header">
+      <div class="sb-logo"><i class="fa-solid fa-city"></i></div>
+      <div class="sb-title-wrap">
+        <h1>부산 전체 상권 지도</h1>
+        <span>소상공인시장진흥공단 15.5만 상가 빅데이터</span>
+      </div>
+      <button id="sb-close" class="icon-btn mobile-only" aria-label="사이드바 닫기"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- Quick Navigation Bar -->
+    <div class="quick-nav-bar">
+      <a href="../web/index.html" class="nav-switch-btn" title="부산 편의점 특화 지도로 이동">
+        <i class="fa-solid fa-store"></i> <span>편의점 특화 지도</span>
+      </a>
+      <a href="../index.html" class="nav-switch-btn outline" title="통합 메인 허브로 이동">
+        <i class="fa-solid fa-house"></i> <span>허브 홈</span>
+      </a>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="search-area">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input id="kw-input" type="text" placeholder="상호명, 지점명, 업종, 주소 통합 검색..." autocomplete="off">
+        <button id="kw-clear" style="display:none" aria-label="검색어 지우기"><i class="fa-solid fa-circle-xmark"></i></button>
+      </div>
+    </div>
+
+    <!-- FILTER SECTION -->
+    <div class="filter-area">
+      <div class="filter-section-title"><i class="fa-solid fa-layer-group"></i> 업종 및 지역 분류</div>
+
+      <!-- 1. 지역 -->
+      <div class="filter-group">
+        <label class="flabel" for="gu-sel"><span class="step-num">1</span>지역 (16개 구·군)</label>
+        <div class="select-wrap">
+          <select id="gu-sel">
+            <option value="">부산 전체 (16개 구·군)</option>
+            <option value="강서구">강서구</option>
+            <option value="금정구">금정구</option>
+            <option value="기장군">기장군</option>
+            <option value="남구">남구</option>
+            <option value="동구">동구</option>
+            <option value="동래구">동래구</option>
+            <option value="부산진구">부산진구</option>
+            <option value="북구">북구</option>
+            <option value="사상구">사상구</option>
+            <option value="사하구">사하구</option>
+            <option value="서구">서구</option>
+            <option value="수영구">수영구</option>
+            <option value="연제구">연제구</option>
+            <option value="영도구">영도구</option>
+            <option value="중구">중구</option>
+            <option value="해운대구">해운대구</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 2. 대분류 -->
+      <div class="filter-group">
+        <label class="flabel"><span class="step-num">2</span>대분류 업종 선택</label>
+        <div class="major-pills" id="major-pills">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- 3. 중분류 -->
+      <div class="filter-group" id="mid-group" style="display:none">
+        <label class="flabel" for="mid-sel"><span class="step-num">3</span>중분류 업종</label>
+        <div class="select-wrap">
+          <select id="mid-sel"><option value="">중분류 전체 (전체보기)</option></select>
+        </div>
+      </div>
+
+      <!-- 4. 소분류 -->
+      <div class="filter-group" id="sub-group" style="display:none">
+        <label class="flabel" for="sub-sel"><span class="step-num">4</span>소분류 업종</label>
+        <div class="select-wrap">
+          <select id="sub-sel"><option value="">소분류 전체 (전체보기)</option></select>
+        </div>
+      </div>
+
+      <!-- RESULT BAR -->
+      <div class="result-bar">
+        <span>조회 결과: <strong id="result-count">-</strong></span>
+        <button id="reset-btn" class="text-btn"><i class="fa-solid fa-arrow-rotate-right"></i> 초기화</button>
+      </div>
+    </div>
+
+    <!-- LIST -->
+    <div class="store-list-wrap" id="store-list-wrap">
+      <div id="loading-msg" class="loading-msg">
+        <i class="fa-solid fa-hand-pointer"></i>
+        <p>조회하실 대분류 업종을 선택해주세요.</p>
+        <span class="guide-sub">음식, 소매, 수리, 학원, 병원 등 10개 업종을 지원합니다.</span>
+      </div>
+      <ul id="store-list"></ul>
+      <div id="list-empty" class="empty-state" style="display:none">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <p>조건에 일치하는 상가가 없습니다.</p>
+        <span class="guide-sub">검색어나 선택한 지역/업종 필터를 변경해보세요.</span>
+      </div>
+      <div id="list-more" class="list-more" style="display:none">
+        <button id="load-more-btn">더보기 (50개씩 추가)</button>
+      </div>
+    </div>
+
+    <div class="sb-footer">
+      <span>데이터: 소상공인시장진흥공단 상가(상권)정보 2026.03</span>
+    </div>
+  </aside>
+
+  <!-- ===== MAP AREA ===== -->
+  <main id="map-area">
+    <!-- Mobile top bar -->
+    <div id="mobile-bar" class="mobile-only">
+      <button id="mb-menu" class="mb-btn" aria-label="메뉴 열기"><i class="fa-solid fa-bars"></i></button>
+      <div id="mb-search-trigger" class="mb-search-text">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <span>15.5만 부산 상가·업종 검색...</span>
+      </div>
+      <button id="mb-loc" class="mb-btn" aria-label="현재 위치"><i class="fa-solid fa-crosshairs"></i></button>
+    </div>
+
+    <!-- Leaflet Map Container -->
+    <div id="map"></div>
+
+    <!-- Floating action buttons -->
+    <div class="float-btns">
+      <button id="gps-btn" class="fbtn" title="내 현재 위치로 이동"><i class="fa-solid fa-location-crosshairs"></i></button>
+      <button id="fit-btn" class="fbtn" title="부산시 전체 보기"><i class="fa-solid fa-expand"></i></button>
+    </div>
+
+    <!-- Bottom Sheet (Mobile Details Card) -->
+    <div id="bottom-sheet" class="bsheet">
+      <div class="bsheet-handle"></div>
+      <div class="bsheet-header">
+        <div class="bsheet-title-row">
+          <h2 id="bs-name">-</h2>
+          <button id="bs-close" class="icon-btn" aria-label="닫기"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="bs-tags" class="tag-row"></div>
+      </div>
+      <div class="bsheet-body">
+        <div class="info-row">
+          <i class="fa-solid fa-road info-icon"></i>
+          <div class="info-text">
+            <span class="addr-label">도로명</span>
+            <span id="bs-road" class="addr-val">-</span>
+            <button class="copy-btn" id="copy-road" title="도로명주소 복사"><i class="fa-regular fa-copy"></i> 복사</button>
+          </div>
+        </div>
+        <div class="info-row">
+          <i class="fa-regular fa-building info-icon"></i>
+          <div class="info-text">
+            <span class="addr-label">지번</span>
+            <span id="bs-jibun" class="addr-val">-</span>
+            <button class="copy-btn" id="copy-jibun" title="지번주소 복사"><i class="fa-regular fa-copy"></i> 복사</button>
+          </div>
+        </div>
+        <div class="action-row">
+          <a id="bs-kakao" href="#" target="_blank" rel="noopener" class="map-link kakao">
+            <i class="fa-solid fa-route"></i> 카카오맵 길찾기
+          </a>
+          <a id="bs-naver" href="#" target="_blank" rel="noopener" class="map-link naver">
+            <i class="fa-solid fa-diamond-turn-right"></i> 네이버 지도
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div id="overlay" class="overlay"></div>
+    <div id="toast" class="toast"></div>
+  </main>
+</div>
+
+<!-- Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
